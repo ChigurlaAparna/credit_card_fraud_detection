@@ -2,10 +2,8 @@
 Credit Card Fraud Detection - Flask Application Package
 """
 from flask import Flask
-from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
-
-db = SQLAlchemy()
+from app.database import db
 
 def create_app():
     """Application factory"""
@@ -24,7 +22,6 @@ def create_app():
     
     # Create database tables
     with app.app_context():
-        from app.database import db
         db.create_all()
     
     return app

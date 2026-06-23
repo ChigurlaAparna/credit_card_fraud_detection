@@ -6,24 +6,22 @@ import os
 import joblib
 import pandas as pd
 import numpy as np
-from flask import Flask, render_template, request, jsonify
+from flask import Blueprint, render_template, request, jsonify
 from datetime import datetime
 import sys
 
 # Add parent directory to path
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, BASE_DIR)
 
-from app.database import db, init_db, Prediction, save_prediction, get_prediction_stats, get_predictions_history, get_fraud_trend
+# Create blueprint
+app = Blueprint('main', __name__)
 
-# Flask app setup
-app = Flask(__name__)
-app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'fraud-detection-secret-key-2024')
-
-# Initialize database
-init_db(app)
+# Import database
+from app.database import db, Prediction, save_prediction, get_prediction_stats, get_predictions_history, get_fraud_trend
 
 # Load models
-MODELS_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'models')
+MODELS_DIR = os.path.join(BASE_DIR, 'models')
 
 def load_model():
     """Load the best trained model"""
@@ -34,10 +32,11 @@ def load_model():
 
 def load_preprocessors():
     """Load preprocessing objects"""
-    from data.data_preprocessing import load_preprocessed_data
     try:
+        from data_preprocessing import load_preprocessed_data
         return load_preprocessed_data()
-    except:
+    except Exception as e:
+        print(f"Warning: Could not load preprocessors: {e}")
         return None
 
 # Load model at startup
