@@ -87,7 +87,8 @@ def plot_amount_distribution(df):
     
     # Box plot comparison
     data_to_plot = [genuine_amounts, fraud_amounts]
-    bp = axes[1, 1].boxplot(data_to_plot, labels=['Genuine', 'Fraud'], patch_artist=True)
+    bp = axes[1, 1].boxplot(data_to_plot, patch_artist=True)
+    axes[1, 1].set_xticklabels(['Genuine', 'Fraud'])
     colors_box = ['#2ecc71', '#e74c3c']
     for patch, color in zip(bp['boxes'], colors_box):
         patch.set_facecolor(color)
@@ -235,11 +236,19 @@ def plot_amount_statistics(df):
     
     # Create summary table
     axes[1, 1].axis('off')
-    table = axes[1, 1].table(cellText=[[f'{v:.2f}' if isinstance(v, float) else f'{v:,}' 
-                                        for v in row[1:]] for row in [stats_data['Metric']] + 
-                                       list(zip(stats_data['Genuine'], stats_data['Fraud']))],
-                             rowLabels=['Metric'] + stats_data['Metric'],
-                             colLabels=['Genuine', 'Fraud'],
+    
+    # Prepare table data
+    table_data = []
+    for metric, genuine, fraud in zip(stats_data['Metric'], stats_data['Genuine'], stats_data['Fraud']):
+        row = [
+            str(metric),
+            f'{genuine:.2f}' if isinstance(genuine, float) else str(genuine),
+            f'{fraud:.2f}' if isinstance(fraud, float) else str(fraud)
+        ]
+        table_data.append(row)
+    
+    table = axes[1, 1].table(cellText=table_data,
+                             colLabels=['Metric', 'Genuine', 'Fraud'],
                              loc='center',
                              cellLoc='center')
     table.auto_set_font_size(False)

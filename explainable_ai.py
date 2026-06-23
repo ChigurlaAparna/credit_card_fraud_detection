@@ -85,39 +85,48 @@ def plot_shap_feature_importance(shap_values, X_sample, model_name):
     print(f"   📊 Saved: shap_feature_importance.png")
     return path
 
-def plot_shap_dependence(shap_values, X_sample, top_features=['V14', 'V17', 'V12']):
+def plot_shap_dependence(shap_values, X_sample, top_features=None):
     """Plot SHAP dependence plots for top features"""
     print("\n📊 Generating SHAP dependence plots...")
     
-    feature_importance = np.abs(shap_values).mean(axis=0)
-    top_idx = np.argsort(feature_importance)[-6:][::-1]
-    top_feature_names = [X_sample.columns[i] for i in top_idx]
-    
-    n_features = len(top_feature_names)
-    n_cols = 3
-    n_rows = (n_features + n_cols - 1) // n_cols
-    
-    fig, axes = plt.subplots(n_rows, n_cols, figsize=(15, 5 * n_rows))
-    axes = axes.flatten() if n_rows > 1 else [axes] if n_cols == 1 else axes.flatten()
-    
-    for i, feat in enumerate(top_feature_names):
-        idx = list(X_sample.columns).index(feat)
-        shap.dependence_plot(feat, shap_values, X_sample, ax=axes[i], 
-                             show=False, interaction_index='auto')
-        axes[i].set_title(f'{feat} Dependence', fontsize=11, fontweight='bold')
-    
-    # Hide empty subplots
-    for j in range(i + 1, len(axes)):
-        axes[j].axis('off')
-    
-    plt.suptitle('SHAP Dependence Plots - Top Features', fontsize=16, fontweight='bold', y=1.02)
-    plt.tight_layout()
-    
-    path = os.path.join(REPORTS_DIR, 'shap_dependence.png')
-    plt.savefig(path, dpi=150, bbox_inches='tight', facecolor='white')
-    plt.close()
-    print(f"   📊 Saved: shap_dependence.png")
-    return path
+    try:
+        feature_importance = np.abs(shap_values).mean(axis=0)
+        top_idx = np.argsort(feature_importance)[-6:][::-1]
+        top_feature_names = [str(X_sample.columns[i]) for i in top_idx]
+        
+        n_features = len(top_feature_names)
+        n_cols = 3
+        n_rows = (n_features + n_cols - 1) // n_cols
+        
+        fig, axes = plt.subplots(n_rows, n_cols, figsize=(15, 5 * n_rows))
+        if n_rows == 1 and n_cols == 1:
+            axes = [axes]
+        elif n_rows == 1 or n_cols == 1:
+            axes = axes.flatten()
+        
+        for i, feat in enumerate(top_feature_names):
+            try:
+                shap.dependence_plot(feat, shap_values, X_sample, ax=axes[i], 
+                                     show=False, interaction_index='auto')
+                axes[i].set_title(f'{feat} Dependence', fontsize=11, fontweight='bold')
+            except Exception as e:
+                axes[i].text(0.5, 0.5, f'Plot error for {feat}', ha='center', va='center')
+        
+        # Hide empty subplots
+        for j in range(i + 1, len(axes)):
+            axes[j].axis('off')
+        
+        plt.suptitle('SHAP Dependence Plots - Top Features', fontsize=16, fontweight='bold', y=1.02)
+        plt.tight_layout()
+        
+        path = os.path.join(REPORTS_DIR, 'shap_dependence.png')
+        plt.savefig(path, dpi=150, bbox_inches='tight', facecolor='white')
+        plt.close()
+        print(f"   📊 Saved: shap_dependence.png")
+        return path
+    except Exception as e:
+        print(f"   ⚠️ Could not generate dependence plots: {e}")
+        return None
 
 def explain_prediction(model, X_sample, instance_idx=0, model_name='Random Forest'):
     """
@@ -202,21 +211,25 @@ def generate_shap_report(model, X_train, X_test, model_name):
     # Calculate SHAP values
     explainer, shap_values, X_sample = calculate_shap_values(model, X_train, X_test, model_name)
     
+    # Ensure shap_values is 2D
+    if len(shap_values.shape) == 3:
+        shap_values = shap_values[:, :, 1]  # Take probability for class 1
+    
     # Generate visualizations
-    plot_shap_summary(shap_values, X_sample, model_name)
-    plot_shap_feature_importance(shap_values, X_sample, model_name)
-    plot_shap_dependence(shap_values, X_sample)
+    try:
+        plot_shap_summary(shap_values, X_sample, model_name)
+    except Exception as e:
+        print(f"   ⚠️ Could not generate summary plot: {e}")
     
-    # Explain sample predictions
-    fraud_indices = X_sample[X_sample.index.isin(X_test[X_test['Class'] == 1].index)].index[:3]
-    genuine_indices = X_sample[X_sample.index.isin(X_test[X_test['Class'] == 0].index)].index[:3]
+    try:
+        plot_shap_feature_importance(shap_values, X_sample, model_name)
+    except Exception as e:
+        print(f"   ⚠️ Could not generate feature importance plot: {e}")
     
-    sample_indices = list(fraud_indices) + list(genuine_indices)
-    
-    explanations = []
-    for idx in sample_indices[:3]:
-        exp = explain_prediction(model, X_sample, list(X_sample.index).index(idx), model_name)
-        explanations.append(exp)
+    try:
+        plot_shap_dependence(shap_values, X_sample)
+    except Exception as e:
+        print(f"   ⚠️ Could not generate dependence plots: {e}")
     
     # Generate text report
     report = []
@@ -229,9 +242,10 @@ def generate_shap_report(model, X_train, X_test, model_name):
     report.append(f"Samples Analyzed: {len(X_sample)}")
     
     # Feature importance summary
+    shap_mean = np.abs(shap_values).mean(axis=0)
     feature_importance = pd.DataFrame({
-        'Feature': X_sample.columns,
-        'Mean |SHAP|': np.abs(shap_values).mean(axis=0)
+        'Feature': list(X_sample.columns),
+        'Mean |SHAP|': shap_mean.flatten() if len(shap_mean.shape) > 1 else shap_mean
     }).sort_values('Mean |SHAP|', ascending=False)
     
     report.append("\n" + "-" * 70)
@@ -256,7 +270,6 @@ def generate_shap_report(model, X_train, X_test, model_name):
     report.append("   • shap_summary.png - SHAP beeswarm plot")
     report.append("   • shap_feature_importance.png - Feature importance bar chart")
     report.append("   • shap_dependence.png - Dependence plots for top features")
-    report.append("   • explanation_instance_*.png - Individual prediction explanations")
     report.append("\n" + "=" * 70)
     
     report_text = "\n".join(report)

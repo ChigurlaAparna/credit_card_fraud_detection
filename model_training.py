@@ -21,7 +21,7 @@ MODELS_DIR = 'models'
 REPORTS_DIR = 'reports'
 os.makedirs(MODELS_DIR, exist_ok=True)
 
-# Model configurations
+# Model configurations (removed Gradient Boosting due to long training time)
 MODELS = {
     'Logistic Regression': LogisticRegression(
         max_iter=1000,
@@ -29,26 +29,18 @@ MODELS = {
         class_weight='balanced'
     ),
     'Random Forest': RandomForestClassifier(
-        n_estimators=100,
-        max_depth=10,
+        n_estimators=50,
+        max_depth=8,
         random_state=42,
         class_weight='balanced',
         n_jobs=-1
     ),
     'XGBoost': XGBClassifier(
-        n_estimators=100,
-        max_depth=6,
+        n_estimators=50,
+        max_depth=4,
         learning_rate=0.1,
         random_state=42,
-        scale_pos_weight=577,  # approximate imbalance ratio
-        use_label_encoder=False,
         eval_metric='logloss'
-    ),
-    'Gradient Boosting': GradientBoostingClassifier(
-        n_estimators=100,
-        max_depth=5,
-        learning_rate=0.1,
-        random_state=42
     )
 }
 
@@ -228,11 +220,19 @@ def train_all_models(X_train, y_train, X_test, y_test):
         from sklearn.base import clone
         model = clone(model_template)
         
-        trained_model, metrics = train_model(
-            name, model, X_train, y_train, X_test, y_test
-        )
-        metrics['model'] = trained_model
-        results.append((name, metrics))
+        try:
+            trained_model, metrics = train_model(
+                name, model, X_train, y_train, X_test, y_test
+            )
+            metrics['model'] = trained_model
+            results.append((name, metrics))
+        except Exception as e:
+            print(f"   ❌ Failed to train {name}: {e}")
+            continue
+    
+    if not results:
+        print("❌ No models were successfully trained!")
+        return None
     
     # Generate visualizations
     print("\n" + "="*50)
