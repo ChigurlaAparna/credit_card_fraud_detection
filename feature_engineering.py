@@ -24,8 +24,8 @@ def create_transaction_features(df):
     df_feat['Amount_Log'] = np.log1p(df_feat['Amount'])
     df_feat['Amount_Squared'] = df_feat['Amount'] ** 2
     df_feat['Amount_Binned'] = pd.cut(df_feat['Amount'], 
-                                       bins=[0, 10, 50, 100, 200, 500, 1000, float('inf')],
-                                       labels=[0, 1, 2, 3, 4, 5, 6]).astype(int)
+                                       bins=[-float('inf'), 10, 50, 100, 200, 500, 1000, float('inf')],
+                                       labels=[0, 1, 2, 3, 4, 5, 6]).astype(float).fillna(0).astype(int)
     
     # 2. Time-based features
     print("   Creating time-based features...")
@@ -35,8 +35,8 @@ def create_transaction_features(df):
     
     # Time periods
     df_feat['Time_Period'] = pd.cut(df_feat['Hour'],
-                                    bins=[0, 6, 12, 18, 24],
-                                    labels=[0, 1, 2, 3]).astype(int)
+                                    bins=[-0.01, 6, 12, 18, 24],
+                                    labels=[0, 1, 2, 3]).astype(float).fillna(0).astype(int)
     
     # 3. V-features aggregations
     print("   Creating V-feature aggregations...")
