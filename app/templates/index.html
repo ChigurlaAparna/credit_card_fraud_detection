@@ -1,0 +1,156 @@
+{% extends "base.html" %}
+
+{% block title %}Fraud Detection - Predict{% endblock %}
+
+{% block content %}
+<div class="hero-section">
+    <div class="container text-center">
+        <h1 class="display-4 mb-3"><i class="fas fa-credit-card me-3"></i>Credit Card Fraud Detection</h1>
+        <p class="lead">Advanced Machine Learning powered fraud detection with real-time predictions</p>
+    </div>
+</div>
+
+<div class="container mb-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card">
+                <div class="card-header bg-white">
+                    <h4 class="mb-0"><i class="fas fa-file-invoice me-2"></i>Transaction Details</h4>
+                </div>
+                <div class="card-body">
+                    <form action="/predict" method="POST">
+                        <!-- Amount Section -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h5 class="text-primary"><i class="fas fa-dollar-sign me-2"></i>Transaction Amount</h5>
+                                <hr>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="Amount" class="form-label">Amount ($)</label>
+                                <input type="number" step="0.01" min="0" class="form-control" id="Amount" name="Amount" 
+                                       placeholder="e.g., 150.00" required>
+                                <small class="text-muted">Enter the transaction amount in USD</small>
+                            </div>
+                        </div>
+
+                        <!-- V1-V14 Features -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h5 class="text-primary"><i class="fas fa-sliders-h me-2"></i>Transaction Features (V1-V14)</h5>
+                                <hr>
+                                <small class="text-muted">These features are derived from the transaction patterns (PCA transformed)</small>
+                            </div>
+                            {% for i in range(1, 15) %}
+                            <div class="col-md-4 col-lg-3 mb-3">
+                                <label for="V{{ i }}" class="form-label">V{{ i }}</label>
+                                <input type="number" step="0.0001" class="form-control form-control-sm" 
+                                       id="V{{ i }}" name="V{{ i }}" value="0">
+                            </div>
+                            {% endfor %}
+                        </div>
+
+                        <!-- V15-V28 Features -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h5 class="text-primary"><i class="fas fa-sliders-h me-2"></i>Transaction Features (V15-V28)</h5>
+                                <hr>
+                            </div>
+                            {% for i in range(15, 29) %}
+                            <div class="col-md-4 col-lg-3 mb-3">
+                                <label for="V{{ i }}" class="form-label">V{{ i }}</label>
+                                <input type="number" step="0.0001" class="form-control form-control-sm" 
+                                       id="V{{ i }}" name="V{{ i }}" value="0">
+                            </div>
+                            {% endfor %}
+                        </div>
+
+                        <!-- Sample Data Buttons -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h5 class="text-secondary"><i class="fas fa-magic me-2"></i>Quick Fill Examples</h5>
+                                <hr>
+                                <button type="button" class="btn btn-outline-primary btn-sm me-2" onclick="fillGenuine()">
+                                    <i class="fas fa-check-circle me-1"></i>Genuine Transaction
+                                </button>
+                                <button type="button" class="btn btn-outline-danger btn-sm" onclick="fillFraud()">
+                                    <i class="fas fa-exclamation-triangle me-1"></i>Suspicious Transaction
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="text-center">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-search me-2"></i>Analyze Transaction
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Info Cards -->
+            <div class="row mt-4">
+                <div class="col-md-4">
+                    <div class="card feature-card h-100">
+                        <div class="feature-icon">
+                            <i class="fas fa-brain"></i>
+                        </div>
+                        <h5>ML-Powered</h5>
+                        <p class="text-muted">Powered by XGBoost and Random Forest algorithms</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card feature-card h-100">
+                        <div class="feature-icon">
+                            <i class="fas fa-lightbulb"></i>
+                        </div>
+                        <h5>Explainable AI</h5>
+                        <p class="text-muted">SHAP-based explanations for every prediction</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card feature-card h-100">
+                        <div class="feature-icon">
+                            <i class="fas fa-bolt"></i>
+                        </div>
+                        <h5>Real-Time</h5>
+                        <p class="text-muted">Instant fraud probability calculation</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Sample genuine transaction data
+function fillGenuine() {
+    const amounts = [25.50, 49.99, 150.00, 89.99, 35.00];
+    document.getElementById('Amount').value = amounts[Math.floor(Math.random() * amounts.length)];
+    
+    // Normal-looking V features
+    const normalValues = [-0.5, 1.2, -0.3, 0.5, -0.8, 0.2, 0.1, -0.2, 0.5, 0.3, -0.1, 0.8, 0.2, -0.3, 0.1, 0.4, -0.5, 0.2, 0.1, -0.2, 0.3, 0.1, -0.1, 0.2, 0.1, -0.1, 0.0, 0.1];
+    for (let i = 1; i <= 28; i++) {
+        document.getElementById('V' + i).value = (Math.random() * 2 - 1).toFixed(4);
+    }
+}
+
+// Sample suspicious/fraud transaction data
+function fillFraud() {
+    const amounts = [450.00, 999.99, 750.00, 1200.00, 850.00];
+    document.getElementById('Amount').value = amounts[Math.floor(Math.random() * amounts.length)];
+    
+    // Suspicious V features (based on feature importance)
+    const suspiciousPatterns = {
+        'V14': -3.5, 'V17': -2.8, 'V12': -2.5, 'V10': -2.0, 'V4': 2.5
+    };
+    
+    for (let i = 1; i <= 28; i++) {
+        if (suspiciousPatterns['V' + i]) {
+            document.getElementById('V' + i).value = suspiciousPatterns['V' + i].toFixed(4);
+        } else {
+            document.getElementById('V' + i).value = (Math.random() * 4 - 2).toFixed(4);
+        }
+    }
+}
+</script>
+{% endblock %}

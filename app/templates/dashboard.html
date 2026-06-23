@@ -1,0 +1,312 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Fraud Detection{% endblock %}
+
+{% block extra_css %}
+<style>
+    .stat-box {
+        border-radius: 15px;
+        padding: 25px;
+        color: white;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .stat-box::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -50%;
+        width: 100%;
+        height: 100%;
+        background: rgba(255,255,255,0.1);
+        transform: rotate(45deg);
+    }
+    
+    .stat-total {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    
+    .stat-fraud {
+        background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+    }
+    
+    .stat-genuine {
+        background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+    }
+    
+    .stat-rate {
+        background: linear-gradient(135deg, #f39c12 0%, #d68910 100%);
+    }
+    
+    .chart-container {
+        background: white;
+        border-radius: 15px;
+        padding: 20px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="hero-section">
+    <div class="container text-center">
+        <h1 class="display-4 mb-3"><i class="fas fa-chart-pie me-3"></i>Dashboard</h1>
+        <p class="lead">Real-time fraud detection analytics and insights</p>
+    </div>
+</div>
+
+<div class="container">
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="stat-box stat-total">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="h2 mb-0">{{ stats.total_predictions }}</div>
+                        <div class="small opacity-75">Total Predictions</div>
+                    </div>
+                    <div>
+                        <i class="fas fa-list fa-3x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-box stat-fraud">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="h2 mb-0">{{ stats.fraud_count }}</div>
+                        <div class="small opacity-75">Fraud Detected</div>
+                    </div>
+                    <div>
+                        <i class="fas fa-exclamation-triangle fa-3x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-box stat-genuine">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="h2 mb-0">{{ stats.genuine_count }}</div>
+                        <div class="small opacity-75">Genuine Transactions</div>
+                    </div>
+                    <div>
+                        <i class="fas fa-check-circle fa-3x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-box stat-rate">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="h2 mb-0">{{ "%.1f"|format(stats.fraud_rate * 100) }}%</div>
+                        <div class="small opacity-75">Fraud Rate</div>
+                    </div>
+                    <div>
+                        <i class="fas fa-percentage fa-3x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="chart-container">
+                <h5 class="mb-4"><i class="fas fa-chart-bar me-2"></i>Fraud Detection Distribution</h5>
+                <canvas id="distributionChart"></canvas>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="chart-container">
+                <h5 class="mb-4"><i class="fas fa-chart-line me-2"></i>7-Day Fraud Trend</h5>
+                <canvas id="trendChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Predictions -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-white">
+                    <h4 class="mb-0"><i class="fas fa-history me-2"></i>Recent Predictions</h4>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Timestamp</th>
+                                    <th>Amount</th>
+                                    <th>Fraud Probability</th>
+                                    <th>Prediction</th>
+                                    <th>Risk Level</th>
+                                    <th>Model</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for pred in history %}
+                                <tr>
+                                    <td>{{ pred.id }}</td>
+                                    <td>{{ pred.timestamp }}</td>
+                                    <td>${{ "%.2f"|format(pred.amount) }}</td>
+                                    <td>
+                                        <div class="progress" style="height: 20px; width: 100px;">
+                                            <div class="progress-bar {% if pred.risk_level == 'HIGH' %}bg-danger{% elif pred.risk_level == 'MEDIUM' %}bg-warning{% else %}bg-success{% endif %}" 
+                                                 role="progressbar" 
+                                                 style="width: {{ pred.fraud_probability * 100 }}%">
+                                                {{ "%.1f"|format(pred.fraud_probability * 100) }}%
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        {% if pred.prediction == 'Fraud' %}
+                                        <span class="badge bg-danger"><i class="fas fa-exclamation-triangle me-1"></i>Fraud</span>
+                                        {% else %}
+                                        <span class="badge bg-success"><i class="fas fa-check me-1"></i>Genuine</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if pred.risk_level == 'HIGH' %}
+                                        <span class="badge bg-danger">HIGH</span>
+                                        {% elif pred.risk_level == 'MEDIUM' %}
+                                        <span class="badge bg-warning">MEDIUM</span>
+                                        {% else %}
+                                        <span class="badge bg-success">LOW</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ pred.model_used }}</td>
+                                </tr>
+                                {% endfor %}
+                                {% if not history %}
+                                <tr>
+                                    <td colspan="7" class="text-center text-muted py-4">
+                                        <i class="fas fa-inbox fa-3x mb-3"></i>
+                                        <p>No predictions yet. Start by making a prediction!</p>
+                                    </td>
+                                </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row mt-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body text-center">
+                    <i class="fas fa-search fa-4x text-primary mb-3"></i>
+                    <h5>Make New Prediction</h5>
+                    <p class="text-muted">Analyze a new transaction for potential fraud</p>
+                    <a href="/" class="btn btn-primary">
+                        <i class="fas fa-plus me-2"></i>New Prediction
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body text-center">
+                    <i class="fas fa-history fa-4x text-secondary mb-3"></i>
+                    <h5>View Full History</h5>
+                    <p class="text-muted">See all past predictions and transactions</p>
+                    <a href="/history" class="btn btn-outline-secondary">
+                        <i class="fas fa-list me-2"></i>View History
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // Distribution Chart
+    const distributionCtx = document.getElementById('distributionChart').getContext('2d');
+    new Chart(distributionCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Genuine', 'Fraud'],
+            datasets: [{
+                data: [{{ stats.genuine_count }}, {{ stats.fraud_count }}],
+                backgroundColor: ['#2ecc71', '#e74c3c'],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+
+    // Trend Chart
+    const trendCtx = document.getElementById('trendChart').getContext('2d');
+    const trendData = {{ trend | tojson }};
+    new Chart(trendCtx, {
+        type: 'line',
+        data: {
+            labels: trendData.map(d => d.day),
+            datasets: [
+                {
+                    label: 'Total Transactions',
+                    data: trendData.map(d => d.total),
+                    borderColor: '#3498db',
+                    backgroundColor: 'rgba(52, 152, 219, 0.1)',
+                    fill: true,
+                    tension: 0.4
+                },
+                {
+                    label: 'Fraud Transactions',
+                    data: trendData.map(d => d.fraud),
+                    borderColor: '#e74c3c',
+                    backgroundColor: 'rgba(231, 76, 60, 0.1)',
+                    fill: true,
+                    tension: 0.4
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+
+    // Auto-refresh dashboard every 30 seconds
+    setInterval(function() {
+        fetch('/api/stats')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                }
+            })
+            .catch(error => console.log('Auto-refresh error:', error));
+    }, 30000);
+</script>
+{% endblock %}

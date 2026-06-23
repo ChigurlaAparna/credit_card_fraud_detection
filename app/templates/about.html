@@ -1,0 +1,187 @@
+{% extends "base.html" %}
+
+{% block title %}About - Fraud Detection{% endblock %}
+
+{% block content %}
+<div class="hero-section">
+    <div class="container text-center">
+        <h1 class="display-4 mb-3"><i class="fas fa-info-circle me-3"></i>About This System</h1>
+        <p class="lead">Advanced Machine Learning for Credit Card Fraud Detection</p>
+    </div>
+</div>
+
+<div class="container">
+    <!-- System Overview -->
+    <div class="row mb-5">
+        <div class="col-lg-8 mx-auto">
+            <div class="card">
+                <div class="card-body">
+                    <h3 class="card-title mb-4"><i class="fas fa-shield-alt me-2 text-primary"></i>What is FraudShield?</h3>
+                    <p class="card-text">
+                        FraudShield is a comprehensive credit card fraud detection system powered by state-of-the-art 
+                        machine learning algorithms. It analyzes transaction patterns and provides real-time fraud 
+                        probability predictions with explainable AI insights.
+                    </p>
+                    <p class="card-text">
+                        The system uses the famous Kaggle Credit Card Fraud Detection dataset and trains multiple 
+                        machine learning models including XGBoost, Random Forest, Gradient Boosting, and Logistic Regression.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Features Grid -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <h2 class="text-center mb-4"><i class="fas fa-star me-2 text-warning"></i>Key Features</h2>
+        </div>
+        <div class="col-md-4">
+            <div class="card feature-card h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-brain fa-4x text-primary mb-3"></i>
+                    <h5>ML-Powered Detection</h5>
+                    <p class="text-muted">Multiple algorithms compared and best model selected automatically</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card feature-card h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-balance-scale fa-4x text-info mb-3"></i>
+                    <h5>SMOTE Balancing</h5>
+                    <p class="text-muted">Handles class imbalance using Synthetic Minority Over-sampling</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card feature-card h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-lightbulb fa-4x text-warning mb-3"></i>
+                    <h5>Explainable AI</h5>
+                    <p class="text-muted">SHAP-based explanations for every prediction</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card feature-card h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-database fa-4x text-success mb-3"></i>
+                    <h5>SQLite Storage</h5>
+                    <p class="text-muted">All predictions stored for analysis and history</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card feature-card h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-chart-line fa-4x text-danger mb-3"></i>
+                    <h5>Dashboard Analytics</h5>
+                    <p class="text-muted">Real-time statistics and fraud trend visualization</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card feature-card h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-mobile-alt fa-4x text-secondary mb-3"></i>
+                    <h5>Responsive UI</h5>
+                    <p class="text-muted">Works on desktop and mobile devices</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Technical Details -->
+    <div class="row mb-5">
+        <div class="col-lg-8 mx-auto">
+            <div class="card">
+                <div class="card-header bg-white">
+                    <h4 class="mb-0"><i class="fas fa-cogs me-2"></i>Technical Details</h4>
+                </div>
+                <div class="card-body">
+                    <h5>Machine Learning Models</h5>
+                    <ul class="list-group mb-4">
+                        <li class="list-group-item"><strong>XGBoost</strong> - Primary model (best performance)</li>
+                        <li class="list-group-item"><strong>Random Forest</strong> - Ensemble of decision trees</li>
+                        <li class="list-group-item"><strong>Gradient Boosting</strong> - Sequential boosting</li>
+                        <li class="list-group-item"><strong>Logistic Regression</strong> - Baseline linear model</li>
+                    </ul>
+
+                    <h5>Evaluation Metrics</h5>
+                    <ul class="list-group mb-4">
+                        <li class="list-group-item"><strong>Accuracy</strong> - Overall correctness</li>
+                        <li class="list-group-item"><strong>Precision</strong> - True fraud among predicted fraud</li>
+                        <li class="list-group-item"><strong>Recall</strong> - Fraud caught</li>
+                        <li class="list-group-item"><strong>F1 Score</strong> - Harmonic mean of precision/recall</li>
+                        <li class="list-group-item"><strong>ROC-AUC</strong> - Classification ability</li>
+                    </ul>
+
+                    <h5>Dataset</h5>
+                    <ul class="list-group">
+                        <li class="list-group-item"><strong>Source:</strong> Kaggle Credit Card Fraud Detection</li>
+                        <li class="list-group-item"><strong>Samples:</strong> 284,807 transactions</li>
+                        <li class="list-group-item"><strong>Fraud Rate:</strong> ~0.17%</li>
+                        <li class="list-group-item"><strong>Features:</strong> V1-V28 (PCA transformed) + Amount + Time</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- How It Works -->
+    <div class="row mb-5">
+        <div class="col-lg-10 mx-auto">
+            <h2 class="text-center mb-4"><i class="fas fa-question-circle me-2 text-info"></i>How It Works</h2>
+            <div class="row">
+                <div class="col-md-3 text-center mb-3">
+                    <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
+                        <span class="h3 mb-0">1</span>
+                    </div>
+                    <h5 class="mt-3">Data Collection</h5>
+                    <p class="text-muted small">Historical transaction data is loaded and analyzed</p>
+                </div>
+                <div class="col-md-3 text-center mb-3">
+                    <div class="bg-info text-white rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
+                        <span class="h3 mb-0">2</span>
+                    </div>
+                    <h5 class="mt-3">Preprocessing</h5>
+                    <p class="text-muted small">Features scaled, class imbalance handled with SMOTE</p>
+                </div>
+                <div class="col-md-3 text-center mb-3">
+                    <div class="bg-success text-white rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
+                        <span class="h3 mb-0">3</span>
+                    </div>
+                    <h5 class="mt-3">Model Training</h5>
+                    <p class="text-muted small">Multiple models trained and best selected</p>
+                </div>
+                <div class="col-md-3 text-center mb-3">
+                    <div class="bg-warning text-white rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
+                        <span class="h3 mb-0">4</span>
+                    </div>
+                    <h5 class="mt-3">Prediction</h5>
+                    <p class="text-muted small">New transactions analyzed with explanations</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Call to Action -->
+    <div class="row">
+        <div class="col-lg-8 mx-auto text-center">
+            <div class="card bg-primary text-white">
+                <div class="card-body py-5">
+                    <h3>Ready to Detect Fraud?</h3>
+                    <p class="mb-4">Start analyzing transactions now</p>
+                    <a href="/" class="btn btn-light btn-lg me-2">
+                        <i class="fas fa-search me-2"></i>Make Prediction
+                    </a>
+                    <a href="/dashboard" class="btn btn-outline-light btn-lg">
+                        <i class="fas fa-chart-line me-2"></i>View Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

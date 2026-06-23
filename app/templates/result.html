@@ -1,0 +1,274 @@
+{% extends "base.html" %}
+
+{% block title %}Prediction Result{% endblock %}
+
+{% block extra_css %}
+<style>
+    .result-card {
+        border-left: 5px solid;
+    }
+    
+    .fraud-result {
+        border-color: #e74c3c;
+    }
+    
+    .genuine-result {
+        border-color: #2ecc71;
+    }
+    
+    .probability-gauge {
+        width: 200px;
+        height: 200px;
+        border-radius: 50%;
+        background: conic-gradient(
+            var(--gauge-color) calc(var(--prob) * 1%),
+            #e0e0e0 calc(var(--prob) * 1%)
+        );
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        margin: 0 auto;
+    }
+    
+    .probability-gauge::before {
+        content: '';
+        width: 150px;
+        height: 150px;
+        background: white;
+        border-radius: 50%;
+        position: absolute;
+    }
+    
+    .probability-value {
+        position: relative;
+        z-index: 1;
+        text-align: center;
+    }
+    
+    .feature-impact {
+        padding: 8px 12px;
+        border-radius: 5px;
+        margin: 5px 0;
+        background: #f8f9fa;
+    }
+    
+    .impact-positive {
+        border-left: 3px solid #e74c3c;
+    }
+    
+    .impact-negative {
+        border-left: 3px solid #2ecc71;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    {% if result.success %}
+    
+    <!-- Main Result Card -->
+    <div class="row justify-content-center mb-4">
+        <div class="col-lg-8">
+            <div class="card result-card {% if result.prediction == 'Fraud' %}fraud-result{% else %}genuine-result{% endif %}">
+                <div class="card-body text-center py-5">
+                    {% if result.prediction == 'Fraud' %}
+                    <div class="fraud-icon mb-4">
+                        <i class="fas fa-exclamation-triangle text-danger fa-5x"></i>
+                    </div>
+                    <h1 class="display-4 text-danger mb-3">⚠️ FRAUD DETECTED</h1>
+                    {% else %}
+                    <div class="genuine-icon mb-4">
+                        <i class="fas fa-check-circle text-success fa-5x"></i>
+                    </div>
+                    <h1 class="display-4 text-success mb-3">✓ GENUINE TRANSACTION</h1>
+                    {% endif %}
+                    
+                    <!-- Probability Gauge -->
+                    <div class="probability-gauge my-4" style="--prob: {{ result.fraud_probability * 100 }}; --gauge-color: {% if result.risk_level == 'HIGH' %}#e74c3c{% elif result.risk_level == 'MEDIUM' %}#f39c12{% else %}#2ecc71{% endif %};">
+                        <div class="probability-value">
+                            <div class="display-4 fw-bold">{{ (result.fraud_probability * 100)|round(1) }}%</div>
+                            <small class="text-muted">Fraud Probability</small>
+                        </div>
+                    </div>
+                    
+                    <div class="row justify-content-center mt-4">
+                        <div class="col-md-4">
+                            <div class="stat-card mb-0">
+                                <div class="text-muted small">Risk Level</div>
+                                <div class="h4 mb-0 
+                                    {% if result.risk_level == 'HIGH' %}text-danger{% elif result.risk_level == 'MEDIUM' %}text-warning{% else %}text-success{% endif %}">
+                                    {{ result.risk_level }}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="stat-card mb-0">
+                                <div class="text-muted small">Genuine Probability</div>
+                                <div class="h4 mb-0 text-success">{{ (result.genuine_probability * 100)|round(1) }}%</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Explanation Card -->
+    <div class="row justify-content-center mb-4">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header bg-white">
+                    <h4 class="mb-0"><i class="fas fa-lightbulb me-2 text-warning"></i>Why This Prediction?</h4>
+                </div>
+                <div class="card-body">
+                    <h5 class="text-danger mb-3"><i class="fas fa-arrow-up me-2"></i>Factors Increasing Fraud Risk</h5>
+                    {% if result.top_fraud_factors %}
+                    {% for factor in result.top_fraud_factors %}
+                    <div class="feature-impact impact-positive">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span><strong>{{ factor.feature }}</strong></span>
+                            <span class="badge bg-danger">Importance: {{ (factor.importance * 100)|round(1) }}%</span>
+                        </div>
+                        <small class="text-muted">Value: {{ factor.value|round(4) }}</small>
+                    </div>
+                    {% endfor %}
+                    {% else %}
+                    <p class="text-muted">No significant fraud-increasing factors detected.</p>
+                    {% endif %}
+                    
+                    <h5 class="text-success mt-4 mb-3"><i class="fas fa-arrow-down me-2"></i>Factors Decreasing Fraud Risk</h5>
+                    {% if result.top_genuine_factors %}
+                    {% for factor in result.top_genuine_factors %}
+                    <div class="feature-impact impact-negative">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span><strong>{{ factor.feature }}</strong></span>
+                            <span class="badge bg-success">Importance: {{ (factor.importance * 100)|round(1) }}%</span>
+                        </div>
+                        <small class="text-muted">Value: {{ factor.value|round(4) }}</small>
+                    </div>
+                    {% endfor %}
+                    {% else %}
+                    <p class="text-muted">No significant fraud-decreasing factors detected.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Transaction Details -->
+    <div class="row justify-content-center mb-4">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header bg-white">
+                    <h4 class="mb-0"><i class="fas fa-list me-2"></i>Transaction Details</h4>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <table class="table table-sm">
+                                <tr>
+                                    <td><strong>Amount:</strong></td>
+                                    <td>${{ transaction.Amount }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>V1:</strong></td>
+                                    <td>{{ transaction.V1 }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>V2:</strong></td>
+                                    <td>{{ transaction.V2 }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>V3:</strong></td>
+                                    <td>{{ transaction.V3 }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>V4:</strong></td>
+                                    <td>{{ transaction.V4 }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>V5:</strong></td>
+                                    <td>{{ transaction.V5 }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>V6:</strong></td>
+                                    <td>{{ transaction.V6 }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>V7:</strong></td>
+                                    <td>{{ transaction.V7 }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>V8:</strong></td>
+                                    <td>{{ transaction.V8 }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>V9:</strong></td>
+                                    <td>{{ transaction.V9 }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>V10:</strong></td>
+                                    <td>{{ transaction.V10 }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>V11:</strong></td>
+                                    <td>{{ transaction.V11 }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>V12:</strong></td>
+                                    <td>{{ transaction.V12 }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>V13:</strong></td>
+                                    <td>{{ transaction.V13 }}</td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <table class="table table-sm">
+                                {% for i in range(14, 29) %}
+                                <tr>
+                                    <td><strong>V{{ i }}:</strong></td>
+                                    <td>{{ transaction['V' + i|string] if transaction['V' + i|string] is defined else 0 }}</td>
+                                </tr>
+                                {% endfor %}
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="row justify-content-center">
+        <div class="col-lg-8 text-center">
+            <a href="/" class="btn btn-primary btn-lg me-3">
+                <i class="fas fa-plus me-2"></i>New Prediction
+            </a>
+            <a href="/dashboard" class="btn btn-outline-secondary btn-lg">
+                <i class="fas fa-chart-line me-2"></i>View Dashboard
+            </a>
+        </div>
+    </div>
+
+    {% else %}
+    <!-- Error Result -->
+    <div class="row justify-content-center">
+        <div class="col-lg-6">
+            <div class="card border-danger">
+                <div class="card-body text-center py-5">
+                    <i class="fas fa-exclamation-circle text-danger fa-5x mb-4"></i>
+                    <h2 class="text-danger">Prediction Error</h2>
+                    <p class="text-muted">{{ result.error }}</p>
+                    <a href="/" class="btn btn-primary mt-3">
+                        <i class="fas fa-arrow-left me-2"></i>Try Again
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
